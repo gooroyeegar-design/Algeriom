@@ -1,12 +1,50 @@
-const { app, BrowserWindow, BrowserView, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, BrowserView, ipcMain, shell, Notification } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 const CHROME_HEIGHT = 92; // px height of tab bar + address bar in renderer/index.html
+const BOOKMARKS_FILE = () => path.join(app.getPath('userData'), 'bookmarks.json');
 
 let mainWindow = null;
 let tabs = []; // { id, title, url, view }
 let activeTabId = null;
 let counter = 0;
+
+// ---------- bookmarks (stored as a small JSON file, survives restarts) ----------
+
+function loadBookmarks() {
+  try {
+    const raw = fs.readFileSync(BOOKMARKS_FILE(), 'utf-8');
+    return JSON.parse(raw);
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveBookmarks(list) {
+  try {
+    fs.writeFileSync(BOOKMARKS_FILE(), JSON.stringify(list, null, 2), 'utf-8');
+  } catch (e) {
+    // non-fatal; bookmarks just won't persist this run
+  }
+}
+
+function toggleBookmark(title, url) {
+  const list = loadBookmarks();
+  const idx = list.findIndex(b => b.url === url);
+  if (idx === -1) {
+    list.unshift({ title: title || url, url });
+  } else {
+    list.splice(idx, 1);
+  }
+  saveBookmarks(list);
+  return list;
+}
+
+ipcMain.handle('get-bookmarks', () => loadBookmarks());
+ipcMain.handle('toggle-bookmark', (_e, { title, url }) => toggleBookmark(title, url));
+
+// ---------- tabs ----------
 
 function serializeTabs() {
   return tabs.map(t => ({
@@ -59,6 +97,7 @@ function attachViewEvents(tab) {
   wc.on('did-navigate', (_e, url) => { tab.url = url; pushState(); });
   wc.on('did-navigate-in-page', (_e, url) => { tab.url = url; pushState(); });
   wc.on('did-finish-load', () => { pushState(); });
+  // open target="_blank" links as new tabs instead of new OS windows
   wc.setWindowOpenHandler(({ url }) => {
     createTab(url);
     return { action: 'deny' };
@@ -68,6 +107,9 @@ function attachViewEvents(tab) {
 function createTab(url) {
   counter++;
   const id = 'tab-' + counter;
+  // No explicit `partition` is set, so this uses Electron's default
+  // persistent session — cookies and localStorage are written to disk
+  // automatically and survive an app restart with no extra code needed.
   const view = new BrowserView({
     webPreferences: { contextIsolation: true, sandbox: true },
   });
@@ -157,6 +199,36 @@ app.whenReady().then(() => {
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
+  });
+
+  // Real downloads: any file a tab tries to download (PDFs, images, etc.)
+  // gets saved straight to the OS Downloads folder, with a system
+  // notification when it finishes.
+  const { session } = require('electron');
+  session.defaultSession.on('will-download', (_event, item) => {
+    const downloadsDir = app.getPath('downloads');
+    let fileName = item.getFilename();
+    let savePath = path.join(downloadsDir, fileName);
+
+    // avoid silently overwriting a file with the same name
+    let counterSuffix = 1;
+    const ext = path.extname(fileName);
+    const base = path.basename(fileName, ext);
+    while (fs.existsSync(savePath)) {
+      fileName = `${base} (${counterSuffix})${ext}`;
+      savePath = path.join(downloadsDir, fileName);
+      counterSuffix++;
+    }
+    item.setSavePath(savePath);
+
+    item.once('done', (_e, state) => {
+      if (state === 'completed' && Notification.isSupported()) {
+        new Notification({
+          title: 'Download complete',
+          body: fileName,
+        }).show();
+      }
+    });
   });
 
   createTab();
