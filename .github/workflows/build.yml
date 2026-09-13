@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
@@ -18,11 +19,12 @@ jobs:
         with:
           node-version: 20
 
-      - run: npm install
+      - run: npm install --no-audit --no-fund
 
       - run: npm run dist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVER: false
 
       - uses: actions/upload-artifact@v4
         with:
