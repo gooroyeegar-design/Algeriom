@@ -78,7 +78,7 @@ function renderGroups() {
     SITES[label].forEach(site => {
       const tile = document.createElement('div');
       tile.className = 'tile';
-      tile.onclick = () => window.algeriom.navigate(activeId, site.url);
+      tile.onclick = () => { if (window.algeriom) window.algeriom.navigate(activeId, site.url); };
       tile.innerHTML = `<div class="dot" style="background:${site.color}">${site.name[0]}</div>
                          <div class="name">${site.name}</div>`;
       tiles.appendChild(tile);
@@ -88,24 +88,38 @@ function renderGroups() {
   });
 }
 
-document.getElementById('newTabBtn').onclick = () => window.algeriom.newTab();
-document.getElementById('backBtn').onclick = () => window.algeriom.goBack(activeId);
-document.getElementById('fwdBtn').onclick = () => window.algeriom.goForward(activeId);
-document.getElementById('reloadBtn').onclick = () => window.algeriom.reload(activeId);
-document.getElementById('homeBtn').onclick = () => window.algeriom.goHome(activeId);
-
-document.getElementById('addrInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') window.algeriom.navigate(activeId, e.target.value);
-});
-document.getElementById('startSearch').addEventListener('keydown', e => {
-  if (e.key === 'Enter') window.algeriom.navigate(activeId, e.target.value);
-});
-
-window.algeriom.onTabsUpdated((tabs, activeTabId) => {
-  tabsState = tabs;
-  activeId = activeTabId;
-  renderTabs();
-  renderAddressBar();
-});
-
+// Build the start-page tiles first, unconditionally, so a bridge problem
+// below can never prevent them from showing up.
 renderGroups();
+
+if (!window.algeriom) {
+  // The preload bridge didn't attach. Surface this clearly instead of
+  // failing silently on every click.
+  console.error('[Algeriom] window.algeriom is undefined — preload script did not load correctly.');
+  const tagline = document.querySelector('.tagline');
+  if (tagline) {
+    tagline.textContent = 'Something didn\u2019t load correctly — try restarting the app. (Bridge unavailable)';
+    tagline.style.color = '#c8102e';
+  }
+} else {
+  // ---- wire up controls ----
+  document.getElementById('newTabBtn').onclick = () => window.algeriom.newTab();
+  document.getElementById('backBtn').onclick = () => window.algeriom.goBack(activeId);
+  document.getElementById('fwdBtn').onclick = () => window.algeriom.goForward(activeId);
+  document.getElementById('reloadBtn').onclick = () => window.algeriom.reload(activeId);
+  document.getElementById('homeBtn').onclick = () => window.algeriom.goHome(activeId);
+
+  document.getElementById('addrInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.algeriom.navigate(activeId, e.target.value);
+  });
+  document.getElementById('startSearch').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.algeriom.navigate(activeId, e.target.value);
+  });
+
+  window.algeriom.onTabsUpdated((tabs, activeTabId) => {
+    tabsState = tabs;
+    activeId = activeTabId;
+    renderTabs();
+    renderAddressBar();
+  });
+}
