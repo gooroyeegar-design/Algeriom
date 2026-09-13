@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Algeriom</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="tabbar" id="tabbar">
+  <button class="newtab-btn" id="newTabBtn" title="New tab">+</button>
+</div>
+
+<div class="chrome">
+  <div class="nav-cluster">
+    <button class="navbtn" id="backBtn" title="Back">
+      <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="navbtn" id="fwdBtn" title="Forward">
+      <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="navbtn" id="reloadBtn" title="Reload">
+      <svg viewBox="0 0 24 24"><path d="M20 11A8 8 0 105 6.3M20 11V4M20 11h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="navbtn" id="homeBtn" title="Home">
+      <svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h5v-5h2v5h5v-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+  <div class="addressbar">
+    <span class="dot" id="secureDot"></span>
+    <input id="addrInput" placeholder="Search or enter an address" spellcheck="false" />
+  </div>
+</div>
+
+<div class="content">
+  <div class="start" id="startPage">
+    <div class="start-inner">
+      <div class="wordmark">
+        <span class="wm-en">Algeriom</span>
+        <span class="wm-ar">ألجيريوم</span>
+      </div>
+      <p class="tagline">A browser for Algeria.</p>
+
+      <div class="search-box">
+        <input id="startSearch" placeholder="Search the web" spellcheck="false" />
+      </div>
+
+      <div class="groups" id="groups"></div>
+    </div>
+  </div>
+</div>
+
+<script src="renderer.js"></script>
+</body>
+  </html>
