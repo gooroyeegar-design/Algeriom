@@ -21,6 +21,7 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 
+/* ---------- Tab bar ---------- */
 .tabbar{
   display:flex;
   align-items:center;
@@ -83,6 +84,7 @@ body{
 }
 .newtab-btn:hover{color:var(--ink);}
 
+/* ---------- Address bar ---------- */
 .chrome{
   background:var(--bg);
   display:flex;
@@ -128,6 +130,11 @@ body{
 }
 .addressbar input::placeholder{color:var(--muted);}
 
+#bookmarkIcon{color:var(--muted);}
+#bookmarkBtn.active #bookmarkIcon{color:var(--green);}
+#bookmarkBtn.active #bookmarkIcon path{fill:var(--green);}
+
+/* ---------- Content / start page ---------- */
 .content{flex:1;position:relative;background:var(--bg);overflow:hidden;}
 .start{position:absolute;inset:0;overflow-y:auto;}
 .start-inner{max-width:560px;margin:0 auto;padding:56px 24px 60px;}
@@ -191,4 +198,4 @@ body{
 @media (max-width:420px){
   .tiles{grid-template-columns:repeat(2,1fr);}
   .wm-en{font-size:28px;}
-  }
+}
